@@ -47,7 +47,8 @@ jobs:
     - name: calculate_version
       shell: bash
       run: |
-        version=$( scripts/tag-to-version )
+        . scripts/functions.sh
+        version=$(tag_to_version)
         echo "version=${version}" >> ${GITHUB_OUTPUT}
         echo "version=${version}" >> ${GITHUB_ENV}
 
@@ -167,7 +168,8 @@ jobs:
       shell: bash
       run: |
         export platform=${{ matrix.platform.arch }}
-        tags=$( scripts/calculate-tags )
+        . scripts/functions.sh
+        tags=$(calculate_tags)
         echo "tags=${tags}" >> ${GITHUB_OUTPUT}
         echo "platform=${platform}" >> ${GITHUB_OUTPUT}
 
@@ -212,8 +214,9 @@ jobs:
       - name: make_total_tagset
         shell: bash
         run: |
-          t1=$( platform=amd64 scripts/calculate-tags )
-          t2=$( platform=arm64 scripts/calculate-tags )
+          . scripts/functions.sh
+          t1=$( platform=amd64 calculate_tags )
+          t2=$( platform=arm64 calculate_tags )
           echo "in_tagset=${t1},${t2}" >> ${GITHUB_OUTPUT}
           echo "out_tagset=$(echo ${t1} | sed -e 's/-amd64$//g' )" >> ${GITHUB_OUTPUT}
 
