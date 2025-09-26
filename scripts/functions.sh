@@ -61,7 +61,8 @@ calculate_tags() {
 	    supplementary=$(echo ${branch} | tr -c -d \[A-z\]\[0-9\])
 	fi
     fi
-    if [ -n "${supplementary}" ]; then
+    if [ -n "${supplementary}" ] && \
+	   [ "${OVERRIDE_BRANCH}" != "${release_branch}" ]; then
 	version="exp_${version}_${supplementary}"
     fi
     tag_type=$(echo ${version} | cut -c 1)
