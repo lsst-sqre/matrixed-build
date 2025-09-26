@@ -5,11 +5,12 @@ tag_to_version() {
 	echo "tag cannot be empty" >&2
 	exit 1
     fi
-    first=$(echo "${tag}" | cut -c 1)
+    version=${tag}
+    first=$(echo "${version}" | cut -c 1)
     if [ "${first}" = "v" ]; then
-	tag="r$(echo ${tag} | cut -c 2-)"
+	version="r$(echo ${version} | cut -c 2-)"
     fi
-    first=$(echo "${tag}" | cut -c 1)
+    first=$(echo "${version}" | cut -c 1)
     if [ "${first}" = "r" ]; then
 	build_number=${GITHUB_RUN_NUMBER}
 	if [ "${build_number}" == "" ]; then
