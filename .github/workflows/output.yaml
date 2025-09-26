@@ -1,0 +1,68 @@
+name: Test case for passing values between stages and jobs
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag_1:
+        description: "First thing to pass around"
+        required: true
+        default: "a"
+      tag_2:
+        description: "Second thing to pass around"
+        required: true
+        default: "b"
+
+
+jobs:
+  job_1:
+    runs-on: ubuntu-latest
+    outputs:
+      j1_1: ${{ steps.step1.outputs.value1 }}
+      j2_1: ${{ steps.step1.outputs.value2 }}
+      j1_2: ${{ steps.step2.outputs.value1 }}
+      j2_2: ${{ steps.step2.outputs.value2 }}
+
+    steps:
+    - name: step1
+      shell: bash
+      run: |
+        echo "Step 1 echo to screen"
+        echo "value1=${{ github.events.inputs.tag_1 }}_s1"
+        echo "value2=${{ github.events.inputs.tag_2 }}_s1"
+        echo "Step 1 echo to output"
+        echo "value1=${{ github.events.inputs.tag_1 }}_s1" >> ${GITHUB_OUTPUT}
+        echo "value2=${{ github.events.inputs.tag_2 }}_s1" >> ${GITHUB_OUTPUT}
+
+    - name: step2
+      shell: bash
+      run: |
+        echo "Step 2 echo to screen"
+        echo "value1=${{ github.events.inputs.tag_1 }}_s2"
+        echo "value2=${{ github.events.inputs.tag_1 }}_s2"
+        echo "Step2 echo to output"
+        echo "value1=${{ github.events.inputs.tag_1 }}_s2" >> ${GITHUB_OUTPUT}
+        echo "value2=${{ github.events.inputs.tag_2 }}_s2" >> ${GITHUB_OUTPUT}
+
+    - name: step3
+      shell: bash
+      run: |
+        echo "Step 3 retrieve values"
+        echo "value1/step1: ${{ steps.step1.outputs.value1 }}"
+        echo "value1/step2: ${{ steps.step2.outputs.value1 }}"        
+        echo "value2/step1: ${{ steps.step1.outputs.value2 }}"
+        echo "value2/step2: ${{ steps.step2.outputs.value2 }}"
+
+  job_2:
+    needs: job_1
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: step1
+        shell: bash
+        run: |
+          echo "Job 2 step 1 retrieve values"
+          echo "1/1: ${{ needs.job1.outputs.j1_1 }}"
+          echo "1/2: ${{ needs.job1.outputs.j1_2 }}"
+          echo "2/1: ${{ needs.job1.outputs.j2_1 }}"
+          echo "2/2: ${{ needs.job1.outputs.j2_2 }}"
+
