@@ -1,0 +1,34 @@
+#!/bin/sh
+
+set -eo pipefail
+
+# source envs.sh first, and then do any manual touchup you want,
+# but have input/image/supplementary/platform set when you get here.
+
+. scripts/functions.sh
+version=$(tag_to_version)
+tags=$(calculate_tags)
+main_tag=$(echo "${tags}" | cut -d ',' -f 1)
+
+echo "tag: ${tag}"
+echo "version: ${version}"
+echo "input: ${input}"
+echo "image: ${image}"
+echo "supplementary: ${supplementary}"
+echo "platform: ${platform}"
+echo "main_image_tag: ${main_tag}"
+echo "tags: ${tags}"
+
+set -x
+docker buildx build \
+       --progress plain \
+       --tag ${main_tag} \
+       --build-arg input="${input}" \
+       --build-arg image="${image}" \
+       --build-arg supplementary="${supplementary}" \
+       --build-arg tag="${tag}" \
+       --build-arg version="${version}" \
+       --platform=linux/${platform} \
+       --output output . # Don't push; let the CI deal with it
+set +x
+       
