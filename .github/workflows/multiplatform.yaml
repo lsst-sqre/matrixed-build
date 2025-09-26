@@ -74,7 +74,8 @@ jobs:
                      d_tag="docker_"
                      d_registry="docker.io"
                      d_username="${{ secrets.DOCKER_USERNAME }}"
-                     d_password="${{ secrets.DOCKER_TOKEN }}"
+                     #d_password="${{ secrets.DOCKER_TOKEN }}"
+                     d_password="${{ secrets.MB_DOCKERHUB_PUSH_TOKEN }}"
                      ;;
                  ghcr.io | *.ghcr.io)
                      d_tag="github_"
@@ -176,6 +177,7 @@ jobs:
         echo "platform=${platform}" >> "${GITHUB_ENV}"
         echo "platform=${platform}" >> $env:GITHUB_OUTPUT
 
+
     - name: setup_buildx
       uses: docker/setup-buildx-action@v3
       with:
@@ -192,6 +194,8 @@ jobs:
         platform=$(determine_platform)
         echo "tags=${tags}" >> $env:GITHUB_OUTPUT
         echo "platform=${platform}" >> $env:GITHUB_OUTPUT
+        # $GITHUB_OUTPUT doesn't work?
+        echo "tags=${tags}" >> "${GITHUB_ENV}"
 
     - name: dump_env
       shell: bash
@@ -209,12 +213,15 @@ jobs:
       with:
         builder: multi-test-${{ env.platform }}
         platforms: linux/${{ env.platform }}
-        tags: ${{ steps.calculate_tags.outputs.tags }}
+        tags: ${{ env.tags }}
         push: true
         build-args: |
-          input=${{ env.input }}
-          tag=${{ env.tag }}
+          input=${{ github.event.inputs.input }}
+          tag=${{ github.event.inputs.tag }}
           version=${{ env.version }}
+          image=${{ github.event.inputs.image }}
+          supplementary=${{ github.event.inputs.supplementary }}
+          
 
   unify_manifest:
     needs: build_containers
@@ -234,10 +241,13 @@ jobs:
         shell: bash
         run: |
           . scripts/functions.sh
+          export version=$(tag_to_version)
           t1=$( platform=amd64 calculate_tags )
           t2=$( platform=arm64 calculate_tags )
           echo "in_tagset=${t1},${t2}" >> $env:GITHUB_OUTPUT
           echo "out_tagset=$(echo ${t1} | sed -e 's/-amd64$//g' )" >> $env:GITHUB_OUTPUT
+          echo "in_tagset=${t1},${t2}" >> "${GITHUB_ENV}"
+          echo "out_tagset=$(echo ${t1} | sed -e 's/-amd64$//g' )" >> "${GITHUB_ENV}"
 
       - name: dump_env
         shell: bash
@@ -247,6 +257,6 @@ jobs:
       - name: make_manifest
         uses: Noelware/docker-manifest-action@v1
         with:
-          inputs: ${{ steps.make_total_tagset.outputs.in_tagset }}
-          tags: ${{ steps.make_total_tagset.outputs.out_tagset }}
+          inputs: ${{ env.in_tagset }}
+          tags: ${{ env.out_tagset }}
           push: true
