@@ -74,8 +74,8 @@ jobs:
                      d_tag="docker_"
                      d_registry="docker.io"
                      d_username="${{ secrets.DOCKER_USERNAME }}"
-                     #d_password="${{ secrets.DOCKER_TOKEN }}"
-                     d_password="${{ secrets.MB_DOCKERHUB_PUSH_TOKEN }}"
+                     d_password="${{ secrets.DOCKER_TOKEN }}"
+                     # d_password="${{ secrets.MB_DOCKERHUB_PUSH_TOKEN }}"
                      ;;
                  ghcr.io | *.ghcr.io)
                      d_tag="github_"
