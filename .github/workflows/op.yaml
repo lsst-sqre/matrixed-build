@@ -28,6 +28,7 @@ jobs:
 
     steps:
     - name: step1
+      id: step1
       shell: bash
       run: |
         echo "Step 1 echo to screen"
@@ -41,6 +42,7 @@ jobs:
         echo "value2=${{ env.value2 }}_s1" >> $env:GITHUB_OUTPUT
 
     - name: step2
+      id: step2
       shell: bash
       run: |
         echo "Step 2 echo to screen"
