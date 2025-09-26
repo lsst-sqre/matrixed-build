@@ -66,4 +66,3 @@ jobs:
           echo "2/1: ${{ needs.job1.outputs.j2_1 }}"
           echo "2/2: ${{ needs.job1.outputs.j2_2 }}"
 
-
