@@ -12,6 +12,9 @@ ARG version
 RUN mkdir -p /tmp/build
 WORKDIR /tmp/build
 
+COPY scripts/update-deps /tmp/build
+RUN /tmp/build/update-deps
+
 COPY scripts/functions.sh /tmp/build
 COPY scripts/save-arguments /tmp/build
 
