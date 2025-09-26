@@ -180,8 +180,8 @@ jobs:
     - name: build_platform_container
       uses: docker/build-push-action@v6
       with:
-        builder: multi-test-${{ env.platform }}
-        platforms: linux/${{ env.platform }}
+        builder: multi-test-${{ matrix.platform.arch }}
+        platforms: linux/${{ matrix.platform.arch }}
         tags: ${{ steps.calculate_tags.outputs.tags }}
         push: true
         build-args: |
