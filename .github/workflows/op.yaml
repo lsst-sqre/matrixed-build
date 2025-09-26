@@ -37,9 +37,6 @@ jobs:
         echo "Step 1 echo to output"
         echo "value1=${{ env.value1 }}_s1" >> ${GITHUB_OUTPUT}
         echo "value2=${{ env.value2 }}_s1" >> ${GITHUB_OUTPUT}
-        # echo "Step 1 echo to PS-style output"
-        # echo "value1=${{ env.value1 }}_s1" >> $env:GITHUB_OUTPUT
-        # echo "value2=${{ env.value2 }}_s1" >> $env:GITHUB_OUTPUT
 
     - name: step2
       id: step2
@@ -51,21 +48,6 @@ jobs:
         echo "Step2 echo to output"
         echo "value1=${{ env.value1 }}_s2" >> ${GITHUB_OUTPUT}
         echo "value2=${{ env.value2 }}_s2" >> ${GITHUB_OUTPUT}
-        # echo "Step 2 echo to PS-style output"
-        # echo "value1=${{ env.value1 }}_s2" >> $env:GITHUB_OUTPUT
-        # echo "value2=${{ env.value2 }}_s2" >> $env:GITHUB_OUTPUT
-
-    - name: examine_outputs
-      shell: bash
-      run: |
-        echo "value of GITHUB_OUTPUT: ${GITHUB_OUTPUT}"
-        echo "---contents of ${GITHUB_OUTPUT}---"
-        cat ${GITHUB_OUTPUT}
-        echo "---end contents---"
-        # echo "value of env:GITHUB_OUTPUT: ${env:GITHUB_OUTPUT}"
-        # echo "---contents of $env:GITHUB_OUTPUT---"
-        # cat $env:GITHUB_OUTPUT
-        # echo "---end contents---"
 
     - name: step3
       env:
@@ -88,10 +70,10 @@ jobs:
       - name: step1
         shell: bash
         env:
-          j11: ${{ needs.job1.outputs.j1_1 }}
-          j12: ${{ needs.job1.outputs.j1_2 }}
-          j21: ${{ needs.job1.outputs.j2_1 }}
-          j22: ${{ needs.job1.outputs.j2_2 }}          
+          j11: ${{ needs.job_1.outputs.j1_1 }}
+          j12: ${{ needs.job_1.outputs.j1_2 }}
+          j21: ${{ needs.job_1.outputs.j2_1 }}
+          j22: ${{ needs.job_1.outputs.j2_2 }}          
         run: |
           echo "Job 2 step 1 retrieve values"
           echo "1/1: ${{ env.j11 }}"
