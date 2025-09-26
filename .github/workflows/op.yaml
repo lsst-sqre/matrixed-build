@@ -22,35 +22,43 @@ jobs:
       j1_2: ${{ steps.step2.outputs.value1 }}
       j2_2: ${{ steps.step2.outputs.value2 }}
 
+    env:
+      value1: ${{ github.event.inputs.tag_1 }}
+      value2: ${{ github.event.inputs.tag_2 }}      
+
     steps:
     - name: step1
       shell: bash
       run: |
         echo "Step 1 echo to screen"
-        echo "value1=${{ github.events.inputs.tag_1 }}_s1"
-        echo "value2=${{ github.events.inputs.tag_2 }}_s1"
+        echo "value1=${{ env.value1 }}_s1"
+        echo "value2=${{ env.value2 }}_s1"
         echo "Step 1 echo to output"
-        echo "value1=${{ github.events.inputs.tag_1 }}_s1" >> ${GITHUB_OUTPUT}
-        echo "value2=${{ github.events.inputs.tag_2 }}_s1" >> ${GITHUB_OUTPUT}
+        echo "value1=${{ env.value1 }}_s1" >> ${GITHUB_OUTPUT}
+        echo "value2=${{ env.value2 }}_s1" >> ${GITHUB_OUTPUT}
 
     - name: step2
       shell: bash
       run: |
         echo "Step 2 echo to screen"
-        echo "value1=${{ github.events.inputs.tag_1 }}_s2"
-        echo "value2=${{ github.events.inputs.tag_1 }}_s2"
+        echo "value1=${{ env.value1 }}_s2"
+        echo "value2=${{ env.value2 }}_s2"
         echo "Step2 echo to output"
-        echo "value1=${{ github.events.inputs.tag_1 }}_s2" >> ${GITHUB_OUTPUT}
-        echo "value2=${{ github.events.inputs.tag_2 }}_s2" >> ${GITHUB_OUTPUT}
+        echo "value1=${{ env.value1 }}_s2" >> ${GITHUB_OUTPUT}
+        echo "value2=${{ env.value2 }}_s2" >> ${GITHUB_OUTPUT}
 
     - name: step3
-      shell: bash
+      env:
+        v1s1: ${{ steps.step1.outputs.value1 }}
+        v1s2: ${{ steps.step1.outputs.value2 }}
+        v2s1: ${{ steps.step2.outputs.value1 }}
+        v2s2: ${{ steps.step2.outputs.value2 }}        
       run: |
         echo "Step 3 retrieve values"
-        echo "value1/step1: ${{ steps.step1.outputs.value1 }}"
-        echo "value1/step2: ${{ steps.step2.outputs.value1 }}"        
-        echo "value2/step1: ${{ steps.step1.outputs.value2 }}"
-        echo "value2/step2: ${{ steps.step2.outputs.value2 }}"
+        echo "value1/step1: ${{ env.v1s1 }}"
+        echo "value1/step2: ${{ env.v1s2 }}"
+        echo "value2/step1: ${{ env.v2s1 }}"
+        echo "value2/step2: ${{ env.v2s2 }}"
 
   job_2:
     needs: job_1
@@ -59,10 +67,15 @@ jobs:
     steps:
       - name: step1
         shell: bash
+        env:
+          j11: ${{ needs.job1.outputs.j1_1 }}
+          j12: ${{ needs.job1.outputs.j1_2 }}
+          j21: ${{ needs.job1.outputs.j2_1 }}
+          j22: ${{ needs.job1.outputs.j2_2 }}          
         run: |
           echo "Job 2 step 1 retrieve values"
-          echo "1/1: ${{ needs.job1.outputs.j1_1 }}"
-          echo "1/2: ${{ needs.job1.outputs.j1_2 }}"
-          echo "2/1: ${{ needs.job1.outputs.j2_1 }}"
-          echo "2/2: ${{ needs.job1.outputs.j2_2 }}"
+          echo "1/1: ${{ env.j11 }}"
+          echo "1/2: ${{ env.j12 }}"
+          echo "2/1: ${{ env.j21 }}"
+          echo "2/2: ${{ env.j22 }}"
 
