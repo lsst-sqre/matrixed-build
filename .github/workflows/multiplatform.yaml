@@ -299,12 +299,42 @@ jobs:
           export version=$(tag_to_version)
           t1=$( platform=amd64 calculate_tags )
           t2=$( platform=arm64 calculate_tags )
-          echo "in_tagset=${t1},${t2}" >> "${GITHUB_OUTPUT}"
-          echo "out_tagset=$(echo ${t1} | sed -e 's/-amd64$//g' )" >> "${GITHUB_OUTPUT}"
+          in="${t1,t2}"
+          out="$(echo ${t1} | sed -e 's/-amd64$//g' )"
+          echo "in=${in}" >> "${GITHUB_OUTPUT}"
+          echo "out=${out}" >> "${GITHUB_OUTPUT}"
+          echo 'in_cr<<EOF' >> ${GITHUB_OUTPUT}
+          echo ${in} | tr ',' '\n' >> ${GITHUB_OUTPUT}
+          echo 'EOF' >> ${GITHUB_OUTPUT}
+          echo "out_cr<<EOF" >> ${GITHUB_OUTPUT}
+          echo ${out} | tr ',' '\n' >> ${GITHUB_OUTPUT}
+          echo "EOF" >> ${GITHUB_OUTPUT}          
+
+      - name: show_tagsets
+        env:
+          in: ${{ steps.make_total_tagset.outputs.in }}
+          out: ${{ steps.make_total_tagset.outputs.out }}
+          in_cr: ${{ steps.make_total_tagset.outputs.in_cr }}
+          out_cr: ${{ steps.make_total_tagset.outputs.out_cr }}
+        shell: bash
+        run: |
+          echo "IN TAGSET: ${in}"
+          echo "OUT TAGSET: ${out}"
+          echo "IN TAGSET (CR): ${in_cr}"
+          echo "OUT TAGSET (CR): ${out_cr}"
+
+      # - name: make_manifest
+      #   uses: int128/docker-manifest-create-action@v2
+      #   with:
+      #     tags: |
+      #       ${{ steps.make_total_tagset.outputs.out_cr }}
+      #     sources: |
+      #       ${{ steps.make_total_tagset.outputs.in_cr }}
+      #     push: true
 
       - name: make_manifest
         uses: Noelware/docker-manifest-action@v1
         with:
-          inputs: ${{ steps.make_total_tagset.outputs.in_tagset }}
-          tags: ${{ steps.make_total_tagset.outputs.out_tagset }}
+          inputs: ${{ steps.make_total_tagset.outputs.in }}
+          tags: ${{ steps.make_total_tagset.outputs.out }}
           push: true
