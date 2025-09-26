@@ -5,11 +5,12 @@ tag_to_version() {
 	echo "tag cannot be empty" >&2
 	exit 1
     fi
-    first=$(echo "${tag}" | cut -c 1)
+    version=${tag}
+    first=$(echo "${version}" | cut -c 1)
     if [ "${first}" = "v" ]; then
-	tag="r$(echo ${tag} | cut -c 2-)"
+	version="r$(echo ${version} | cut -c 2-)"
     fi
-    first=$(echo "${tag}" | cut -c 1)
+    first=$(echo "${version}" | cut -c 1)
     if [ "${first}" = "r" ]; then
 	build_number=${GITHUB_RUN_NUMBER}
 	if [ "${build_number}" == "" ]; then
@@ -60,7 +61,8 @@ calculate_tags() {
 	    supplementary=$(echo ${branch} | tr -c -d \[A-z\]\[0-9\])
 	fi
     fi
-    if [ -n "${supplementary}" ]; then
+    if [ -n "${supplementary}" ] && \
+	   [ "${OVERRIDE_BRANCH}" != "${release_branch}" ]; then
 	version="exp_${version}_${supplementary}"
     fi
     tag_type=$(echo ${version} | cut -c 1)

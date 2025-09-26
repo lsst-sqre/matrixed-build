@@ -1,0 +1,7 @@
+#!/bin/sh
+set -euo pipefail
+
+apk update
+apk upgrade
+apk add git
+apk cache clean

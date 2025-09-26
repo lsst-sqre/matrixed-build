@@ -47,9 +47,10 @@ jobs:
     - name: calculate_version
       shell: bash
       run: |
-        version=$( scripts/tag-to-version )
-        echo "version=${version}" >> ${GITHUB_OUTPUT}
-        echo "version=${version}" >> ${GITHUB_ENV}
+        . scripts/functions.sh
+        version=$(tag_to_version)
+        echo "version=${version}" >> $env:GITHUB_OUTPUT
+        echo "version=${version}" >> "${GITHUB_ENV}"
 
     - name: parse_env
       shell: bash
@@ -74,6 +75,7 @@ jobs:
                      d_registry="docker.io"
                      d_username="${{ secrets.DOCKER_USERNAME }}"
                      d_password="${{ secrets.DOCKER_TOKEN }}"
+                     # d_password="${{ secrets.MB_DOCKERHUB_PUSH_TOKEN }}"
                      ;;
                  ghcr.io | *.ghcr.io)
                      d_tag="github_"
@@ -96,9 +98,9 @@ jobs:
                      d_password=""
                      ;;
              esac
-             echo "${d_tag}registry=${d_registry}" >> $GITHUB_ENV
-             echo "${d_tag}username=${d_username}" >> $GITHUB_ENV
-             echo "${d_tag}password=${d_password}" >> $GITHUB_ENV
+             echo "${d_tag}registry=${d_registry}" >> "$GITHUB_ENV"
+             echo "${d_tag}username=${d_username}" >> "$GITHUB_ENV"
+             echo "${d_tag}password=${d_password}" >> "$GITHUB_ENV"
          done
 
     # Only bother logging in to a given site if we have credentials
@@ -135,12 +137,18 @@ jobs:
         username: ${{ env.google_username }}
         password: ${{ env.google_password }}
 
+    - name: show_outputs
+      shell: bash
+      run: |
+        echo "Output file: ${GITHUB_OUTPUT}"
+        cat $env:GITHUB_OUTPUT
+
   build_containers:
     needs: multiplatform_setup
     runs-on: ubuntu-latest
     timeout-minutes: 300
     outputs:
-      version: ${{ needs.multiplatform_setup.outputs.version }}
+      version: ${{ needs.multiplatform_setup.outputs.version }} # Why not?
     env:
       version: ${{ needs.multiplatform_setup.outputs.version }}
       tag: ${{ github.event.inputs.tag }}
@@ -154,8 +162,21 @@ jobs:
           - arch: "amd64"
           - arch: "arm64"
     steps:
+
     - name: checkout_setup
       uses: actions/checkout@v4
+
+    - name: force_version_and_platform
+      shell: bash
+      run: |
+        export platform="${{ matrix.platform.arch }}"
+        . scripts/functions.sh
+        export version="$(tag_to_version)"
+        echo "version=${version}" >> "${GITHUB_ENV}"
+        echo "version=${version}" >> $env:GITHUB_OUTPUT
+        echo "platform=${platform}" >> "${GITHUB_ENV}"
+        echo "platform=${platform}" >> $env:GITHUB_OUTPUT
+
 
     - name: setup_buildx
       uses: docker/setup-buildx-action@v3
@@ -166,34 +187,41 @@ jobs:
     - name: calculate_tags
       shell: bash
       run: |
-        export platform=${{ matrix.platform.arch }}
-        tags=$( scripts/calculate-tags )
-        echo "tags=${tags}" >> ${GITHUB_OUTPUT}
-        echo "platform=${platform}" >> ${GITHUB_OUTPUT}
+        export platform="${{ matrix.platform.arch }}"
+        . scripts/functions.sh
+        tags=$(calculate_tags)
+        version=$(tag_to_version)
+        platform=$(determine_platform)
+        echo "tags=${tags}" >> $env:GITHUB_OUTPUT
+        echo "platform=${platform}" >> $env:GITHUB_OUTPUT
+        # $GITHUB_OUTPUT doesn't work?
+        echo "tags=${tags}" >> "${GITHUB_ENV}"
 
     - name: dump_env
       shell: bash
       run: |
         /bin/true
 
-    - name: save_args
+    - name: show_outputs
       shell: bash
       run: |
-        export platform=${{ matrix.platform.arch }}
-        scripts/save-arguments
-        bash -x scripts/save-arguments
+        echo "Output file: ${GITHUB_OUTPUT}"
+        cat $env:GITHUB_OUTPUT
 
     - name: build_platform_container
       uses: docker/build-push-action@v6
       with:
-        builder: multi-test-${{ github.event.inputs.platform }}
-        platforms: linux/${{ steps.calculate_tags.outputs.platform }}
-        tags: ${{ steps.calculate_tags.outputs.tags }}
+        builder: multi-test-${{ env.platform }}
+        platforms: linux/${{ env.platform }}
+        tags: ${{ env.tags }}
         push: true
         build-args: |
-          input=${{ env.input }}
-          tag=${{ env.tag }}
+          input=${{ github.event.inputs.input }}
+          tag=${{ github.event.inputs.tag }}
           version=${{ env.version }}
+          image=${{ github.event.inputs.image }}
+          supplementary=${{ github.event.inputs.supplementary }}
+          
 
   unify_manifest:
     needs: build_containers
@@ -212,10 +240,14 @@ jobs:
       - name: make_total_tagset
         shell: bash
         run: |
-          t1=$( platform=amd64 scripts/calculate-tags )
-          t2=$( platform=arm64 scripts/calculate-tags )
-          echo "in_tagset=${t1},${t2}" >> ${GITHUB_OUTPUT}
-          echo "out_tagset=$(echo ${t1} | sed -e 's/-amd64$//g' )" >> ${GITHUB_OUTPUT}
+          . scripts/functions.sh
+          export version=$(tag_to_version)
+          t1=$( platform=amd64 calculate_tags )
+          t2=$( platform=arm64 calculate_tags )
+          echo "in_tagset=${t1},${t2}" >> $env:GITHUB_OUTPUT
+          echo "out_tagset=$(echo ${t1} | sed -e 's/-amd64$//g' )" >> $env:GITHUB_OUTPUT
+          echo "in_tagset=${t1},${t2}" >> "${GITHUB_ENV}"
+          echo "out_tagset=$(echo ${t1} | sed -e 's/-amd64$//g' )" >> "${GITHUB_ENV}"
 
       - name: dump_env
         shell: bash
@@ -225,6 +257,6 @@ jobs:
       - name: make_manifest
         uses: Noelware/docker-manifest-action@v1
         with:
-          inputs: ${{ steps.make_total_tagset.outputs.in_tagset }}
-          tags: ${{ steps.make_total_tagset.outputs.out_tagset }}
+          inputs: ${{ env.in_tagset }}
+          tags: ${{ env.out_tagset }}
           push: true
