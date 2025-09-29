@@ -13,7 +13,7 @@ tag_to_version() {
     first=$(echo "${version}" | cut -c 1)
     if [ "${first}" = "r" ]; then
         build_number=${GITHUB_RUN_NUMBER}
-        if [ "${build_number}" == "" ]; then
+        if [ "${build_number}" = "" ]; then
             build_number=0
         fi
         version="${version}_rsp${build_number}"    
