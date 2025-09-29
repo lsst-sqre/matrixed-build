@@ -190,6 +190,8 @@ jobs:
           version=${{ env.version }}
           image=${{ github.event.inputs.image }}
           supplementary=${{ github.event.inputs.supplementary }}
+          cache-from=type=gha
+          cache-to=type=gha,mode=max
 
   unify_manifest:
     needs: build_containers
@@ -299,8 +301,8 @@ jobs:
           export version=$(tag_to_version)
           t1=$( platform=amd64 calculate_tags )
           t2=$( platform=arm64 calculate_tags )
-          in="${t1,t2}"
-          out="$(echo ${t1} | sed -e 's/-amd64$//g' )"
+          in="${t1},${t2}"
+          out="$(echo ${t1} | sed -e 's/-amd64,/,/g' -e 's/-amd64$//g' )"
           echo "in=${in}" >> "${GITHUB_OUTPUT}"
           echo "out=${out}" >> "${GITHUB_OUTPUT}"
           echo 'in_cr<<EOF' >> ${GITHUB_OUTPUT}
@@ -332,9 +334,52 @@ jobs:
       #       ${{ steps.make_total_tagset.outputs.in_cr }}
       #     push: true
 
-      - name: make_manifest
+      - name: split_tags_by_registry
+        env:
+          tagset_in: ${{ steps.make_total_tagset.outputs.in }}
+          tagset_out: ${{ steps.make_total_tagset.outputs.out }} 
+        shell: bash
+        run: |
+          . scripts/functions.sh
+          ghcr_tags_in=$( filter_tags ghcr.io ${tagset_in} )
+          gar_tags_in=$( filter_tags us-central1-docker.pkg.dev ${tagset_in} )
+          docker_tags_in=$( filter_tags docker.io ${tagset_in} )
+          ghcr_tags_out=$( filter_tags ghcr.io ${tagset_out} )
+          gar_tags_out=$( filter_tags us-central1-docker.pkg.dev ${tagset_out} )
+          docker_tags_out=$( filter_tags docker.io ${tagset_out} )
+          echo "ghcr_tags_in=${ghcr_tags_in}" >> ${GITHUB_ENV}
+          echo "gar_tags_in=${gar_tags_in}" >> ${GITHUB_ENV}
+          echo "docker_tags_in=${docker_tags_in}" >> ${GITHUB_ENV}
+          echo "ghcr_tags_out=${ghcr_tags_out}" >> ${GITHUB_ENV}
+          echo "gar_tags_out=${gar_tags_out}" >> ${GITHUB_ENV}
+          echo "docker_tags_out=${docker_tags_out}" >> ${GITHUB_ENV}
+
+      - name: manifest_for_ghcr
+        if: >-
+          (( ${ env.ghcr_tags_in }} != '' ) &&
+          ( ${{ env.ghcr_tags_out }} != '' )
         uses: Noelware/docker-manifest-action@v1
         with:
-          inputs: ${{ steps.make_total_tagset.outputs.in }}
-          tags: ${{ steps.make_total_tagset.outputs.out }}
+          inputs: ${{ env.ghcr_tags_in }}
+          tags: ${{ env.ghcr_tags_out }}
+          push: true
+          
+      - name: manifest_for_gar
+        if: >-
+          (( ${{ env.gar_tags_in }} != '' ) &&
+          ( ${{ env.gar_tags_out }} != '' ))
+        uses: Noelware/docker-manifest-action@v1
+        with:
+          inputs: ${{ env.gar_tags_in }}
+          tags: ${{ env.gar_tags_out }}
+          push: true
+          
+      - name: manifest_for_docker
+        if: >-
+          (( ${{ env.docker_tags_in }} != '' ) &&
+          ( ${ env.docker_tags_out }} != '' ))
+        uses: Noelware/docker-manifest-action@v1
+        with:
+          inputs: ${{ env.docker_tags_in }}
+          tags: ${{ env.docker_tags_out }}
           push: true
