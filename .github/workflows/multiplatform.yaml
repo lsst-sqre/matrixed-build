@@ -190,6 +190,8 @@ jobs:
           version=${{ env.version }}
           image=${{ github.event.inputs.image }}
           supplementary=${{ github.event.inputs.supplementary }}
+          cache-from=type=gha
+          cache-to=type=gha,mode=max
 
   unify_manifest:
     needs: build_containers
@@ -299,12 +301,20 @@ jobs:
           export version=$(tag_to_version)
           t1=$( platform=amd64 calculate_tags )
           t2=$( platform=arm64 calculate_tags )
-          echo "in_tagset=${t1},${t2}" >> "${GITHUB_OUTPUT}"
-          echo "out_tagset=$(echo ${t1} | sed -e 's/-amd64$//g' )" >> "${GITHUB_OUTPUT}"
+          in="${t1},${t2}"
+          out="$(echo ${t1} | sed -e 's/-amd64,/,/g' -e 's/-amd64$//g' )"
+          echo "in=${in}" >> "${GITHUB_OUTPUT}"
+          echo "out=${out}" >> "${GITHUB_OUTPUT}"
+          echo 'in_cr<<EOF' >> ${GITHUB_OUTPUT}
+          echo ${in} | tr ',' '\n' >> ${GITHUB_OUTPUT}
+          echo 'EOF' >> ${GITHUB_OUTPUT}
+          echo "out_cr<<EOF" >> ${GITHUB_OUTPUT}
+          echo ${out} | tr ',' '\n' >> ${GITHUB_OUTPUT}
+          echo "EOF" >> ${GITHUB_OUTPUT}          
 
-      - name: make_manifest
+      - name: manifest
         uses: Noelware/docker-manifest-action@v1
         with:
-          inputs: ${{ steps.make_total_tagset.outputs.in_tagset }}
-          tags: ${{ steps.make_total_tagset.outputs.out_tagset }}
+          inputs: ${{ steps.make_total_tagset.outputs.in }}
+          tags: ${{ steps.make_total_tagset.outputs.out }}
           push: true
