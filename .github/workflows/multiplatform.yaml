@@ -62,7 +62,7 @@ jobs:
         . scripts/functions.sh
         t1=$( platform=amd64 calculate_tags )
         tt="$(echo ${t1} | sed -e 's/-amd64,/,/g' -e 's/-amd64$//g' )"
-        imgs="$(echo ${tt} | tr ',' ' ')
+        imgs="$(echo ${tt} | tr ',' ' ')"
         alltags=""
         for i in ${imgs}; do
             t=$(echo ${i} | cut -d ':' -f 2)
@@ -77,11 +77,11 @@ jobs:
         echo "additional_tags=${unique_tags}" >> ${GITHUB_OUTPUT}
 
   build:
-    needs: get-version
+    needs: get_version
     uses: lsst-sqre/multiplatform-build-and-push/.github/workflows/build.yaml@main
     with:
-      images: ${{ github.event.inputs.images }}
-      additional-tags: ${{ steps.get_tags.outputs.additional_tags }}
+      images: ${{ github.event.inputs.image }}
+      additional-tags: ${{ needs.get_version.outputs.additional_tags }}
 
   report:
     needs: build
