@@ -82,6 +82,7 @@ jobs:
     with:
       images: ${{ github.event.inputs.image }}
       additional-tags: ${{ needs.get_version.outputs.additional_tags }}
+    secrets: inherit
 
   report:
     needs: build
