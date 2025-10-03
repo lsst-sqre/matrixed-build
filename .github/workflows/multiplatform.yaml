@@ -76,16 +76,20 @@ jobs:
                        | tr '\n' ',' | sed -e 's/,$//' )
         echo "additional_tags=${unique_tags}" >> ${GITHUB_OUTPUT}
 
-    - name: build
-      id: build
-      uses: lsst-sqre/multiplatform-build-and-push/.github/workflows/build.yaml@main
-      with:
-        images: ${{ github.event.inputs.images }}
-        additional-tags: ${{ steps.get_tags.outputs.additional_tags }}
+  build:
+    needs: get-version
+    uses: lsst-sqre/multiplatform-build-and-push/.github/workflows/build.yaml@main
+    with:
+      images: ${{ github.event.inputs.images }}
+      additional-tags: ${{ steps.get_tags.outputs.additional_tags }}
 
+  report:
+    needs: build
+    runs-on: ubuntu-latest
+    env:
+      built: ${{ needs.build.outputs.images }}
+    steps:
     - name: report
-      env:
-        built: ${{ steps.build.outputs.images }}
       shell: bash
       run: |
         echo "Built images: ${built}"
