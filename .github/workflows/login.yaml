@@ -1,0 +1,28 @@
+name: Manually triggered build of multiplatform test container
+
+on:
+  workflow_dispatch:
+    inputs:
+      image:
+        description: 'fully-qualified URI for output Docker image'
+        required: false
+        default: 'us-central1-docker.pkg.dev/rubin-shared-services-71ec/sciplat/multi-test,ghcr.io/lsst-sqre/multi-test,docker.io/lsstsqre/multi-test'
+
+# We need actions/write if we want to do a GH App, and we need
+# packages/write to push to ghcr.io with GITHUB_TOKEN
+permissions:
+  actions: write
+  contents: read
+  packages: write
+  statuses: read
+
+jobs:
+  login:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      images: ${{ github.event.inputs.image }}
+
+    steps:
+    - name: login
+      uses: lsst-sqre/multi-repository-login@v1
