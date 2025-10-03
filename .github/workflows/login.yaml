@@ -1,4 +1,4 @@
-name: Manually triggered build of multiplatform test container
+name: Manually triggered login
 
 on:
   workflow_dispatch:
