@@ -82,6 +82,8 @@ jobs:
     with:
       images: ${{ github.event.inputs.image }}
       additional-tags: ${{ needs.get_version.outputs.additional_tags }}
+      tag: ${{ github.event.inputs.tag }}
+      cache: false
       build-args: |
         input=${{ github.event.inputs.input }}
         tag=${{ github.event.inputs.tag }}
