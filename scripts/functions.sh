@@ -45,7 +45,7 @@ calculate_tags() {
         exit 1
     fi
 
-    branch=$(git rev-parse --abbrev-ref HEAD)
+    branch=$(git rev-parse --abbrev-ref HEAD || /bin/true)
     if [ -n "${OVERRIDE_BRANCH}" ]; then
         branch="${OVERRIDE_BRANCH}"
     fi
