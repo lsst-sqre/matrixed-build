@@ -89,14 +89,3 @@ jobs:
         supplementary=${{ github.event.inputs.supplementary }}
         version=${{ needs.get_version.outputs.version }}
     secrets: inherit
-
-  report:
-    needs: build
-    runs-on: ubuntu-latest
-    env:
-      built: ${{ needs.build.outputs.images }}
-    steps:
-    - name: report
-      shell: bash
-      run: |
-        echo "Built images: ${built}"
