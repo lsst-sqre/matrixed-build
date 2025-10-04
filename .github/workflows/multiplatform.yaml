@@ -94,7 +94,7 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     env:
-      built: ${{ needs.build.outputs.images }}
+      built: ${{ needs.build.outputs.manifest_images }}
     steps:
     - name: report
       shell: bash
