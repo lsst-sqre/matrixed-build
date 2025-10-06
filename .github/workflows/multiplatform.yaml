@@ -51,7 +51,7 @@ jobs:
       run: |
         . scripts/functions.sh
         version=$(tag_to_version)
-        echo "version=${version}" >> "${GITHUB_OUTPUT}"
+        echo "version=${version}" >> ${GITHUB_OUTPUT}
 
     - name: get_tags
       env:
