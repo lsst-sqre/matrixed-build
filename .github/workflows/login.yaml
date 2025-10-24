@@ -23,10 +23,9 @@ jobs:
 
     steps:
     - name: login
-      uses: lsst-sqre/multi-repository-login@v1
+      uses: lsst-sqre/multi-repository-login@u/ajt/v2
       with:
         images: ${{ github.event.inputs.image }}
         DOCKER_TOKEN: ${{ secrets.DOCKER_TOKEN }}
         DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
         GAR_PUSH_TOKEN: ${{ secrets.GAR_PUSH_TOKEN }}
-        GHCR_PUSH_TOKEN: ${{ secrets.GHCR_PUSH_TOKEN }}

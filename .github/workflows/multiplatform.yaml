@@ -78,7 +78,7 @@ jobs:
 
   build:
     needs: get_version
-    uses: lsst-sqre/multiplatform-build-and-push/.github/workflows/build.yaml@u/ajt/action
+    uses: lsst-sqre/multiplatform-build-and-push/.github/workflows/build.yaml@u/ajt/v2
     with:
       images: ${{ github.event.inputs.image }}
       additional-tags: ${{ needs.get_version.outputs.additional_tags }}
